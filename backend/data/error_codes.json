@@ -1,0 +1,136 @@
+[
+  {
+    "code": "E104",
+    "description": "Excessive spindle vibration",
+    "possible_causes": [
+      "Bearing wear",
+      "Shaft misalignment",
+      "Tool imbalance",
+      "Loose mounting"
+    ],
+    "recommended_actions": [
+      "Inspect spindle bearing",
+      "Check shaft alignment",
+      "Inspect tool balance",
+      "Retorque mounting bolts"
+    ]
+  },
+  {
+    "code": "E211",
+    "description": "Motor overheating detected",
+    "possible_causes": [
+      "Cooling fan failure",
+      "Blocked airflow",
+      "Overload condition"
+    ],
+    "recommended_actions": [
+      "Inspect cooling fan",
+      "Clean ventilation path",
+      "Reduce load and monitor current"
+    ]
+  },
+  {
+    "code": "E307",
+    "description": "Drive belt slippage",
+    "possible_causes": [
+      "Belt wear",
+      "Improper belt tension",
+      "Pulley contamination"
+    ],
+    "recommended_actions": [
+      "Replace worn belt",
+      "Set proper belt tension",
+      "Clean and inspect pulleys"
+    ]
+  },
+  {
+    "code": "E415",
+    "description": "Shaft alignment out of tolerance",
+    "possible_causes": [
+      "Coupling shift",
+      "Foundation settling",
+      "Incorrect installation"
+    ],
+    "recommended_actions": [
+      "Perform laser alignment",
+      "Inspect base leveling",
+      "Recheck coupling hardware"
+    ]
+  },
+  {
+    "code": "E522",
+    "description": "Hydraulic pressure loss",
+    "possible_causes": ["Seal leakage", "Pump wear", "Line blockage"],
+    "recommended_actions": [
+      "Inspect for leaks",
+      "Test pump performance",
+      "Flush hydraulic lines"
+    ]
+  },
+  {
+    "code": "E266",
+    "description": "Tool holder imbalance",
+    "possible_causes": ["Tool wear", "Improper seating", "Holder damage"],
+    "recommended_actions": [
+      "Inspect holder condition",
+      "Re-seat and rebalance tool",
+      "Replace damaged holder"
+    ]
+  },
+  {
+    "code": "E341",
+    "description": "Lubrication supply interruption",
+    "possible_causes": [
+      "Clogged lubrication line",
+      "Low oil level",
+      "Faulty lubrication pump"
+    ],
+    "recommended_actions": [
+      "Check oil reservoir",
+      "Flush lubrication channels",
+      "Service lubrication pump"
+    ]
+  },
+  {
+    "code": "E487",
+    "description": "Electrical overload event",
+    "possible_causes": [
+      "Excessive load",
+      "Winding insulation degradation",
+      "Phase imbalance"
+    ],
+    "recommended_actions": [
+      "Measure phase current",
+      "Inspect motor winding",
+      "Reduce process load"
+    ]
+  },
+  {
+    "code": "E593",
+    "description": "Cooling system underperformance",
+    "possible_causes": [
+      "Coolant pump degradation",
+      "Clogged heat exchanger",
+      "Coolant contamination"
+    ],
+    "recommended_actions": [
+      "Test coolant flow",
+      "Clean heat exchanger",
+      "Replace contaminated coolant"
+    ]
+  },
+  {
+    "code": "E678",
+    "description": "Persistent structural vibration",
+    "possible_causes": [
+      "Loose base fasteners",
+      "Resonance at operating RPM",
+      "Uneven load distribution"
+    ],
+    "recommended_actions": [
+      "Inspect and retighten fasteners",
+      "Shift operating RPM band",
+      "Rebalance mechanical load"
+    ]
+  }
+]
