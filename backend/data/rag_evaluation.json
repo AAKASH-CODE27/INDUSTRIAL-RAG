@@ -1,0 +1,50 @@
+[
+  {
+    "query": "Why is spindle vibration increasing?",
+    "expected_documents": [
+      "03_Spindle_Bearing_Maintenance_Guide",
+      "05_Vibration_Troubleshooting_Guide",
+      "01_CNC_Machine_Operation_Manual"
+    ]
+  },
+  {
+    "query": "What causes high motor current?",
+    "expected_documents": ["04_Motor_Troubleshooting_Guide"]
+  },
+  {
+    "query": "What are signs of bearing degradation?",
+    "expected_documents": [
+      "03_Spindle_Bearing_Maintenance_Guide",
+      "05_Vibration_Troubleshooting_Guide"
+    ]
+  },
+  {
+    "query": "What causes low hydraulic pressure?",
+    "expected_documents": ["06_Hydraulic_System_Troubleshooting_Guide"]
+  },
+  {
+    "query": "What does error E104 indicate?",
+    "expected_documents": ["08_Industrial_Error_Code_Reference"]
+  },
+  {
+    "query": "What causes unstable RPM?",
+    "expected_documents": [
+      "04_Motor_Troubleshooting_Guide",
+      "05_Vibration_Troubleshooting_Guide"
+    ]
+  },
+  {
+    "query": "What should be checked when vibration and temperature increase?",
+    "expected_documents": [
+      "03_Spindle_Bearing_Maintenance_Guide",
+      "05_Vibration_Troubleshooting_Guide"
+    ]
+  },
+  {
+    "query": "What should be checked before machine maintenance?",
+    "expected_documents": [
+      "02_Preventive_Maintenance_Manual",
+      "01_CNC_Machine_Operation_Manual"
+    ]
+  }
+]

@@ -13,6 +13,9 @@ from app.models.failure import Failure
 from app.models.maintenance import MaintenanceRecord
 from app.models.machine import Machine
 from app.models.sensor import SensorReading
+from app.api.rag import router as rag_router
+
+
 
 # Create database tables
 setup_logging()
@@ -32,6 +35,7 @@ app.include_router(sensors_router)
 app.include_router(anomaly_router)
 app.include_router(failures_router)
 app.include_router(maintenance_router)
+app.include_router(rag_router)
 
 @app.get("/")
 def root():
