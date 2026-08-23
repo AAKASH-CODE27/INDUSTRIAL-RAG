@@ -14,6 +14,7 @@ from app.models.maintenance import MaintenanceRecord
 from app.models.machine import Machine
 from app.models.sensor import SensorReading
 from app.api.rag import router as rag_router
+from app.api.routes.chat import router as chat_router
 
 
 
@@ -36,6 +37,7 @@ app.include_router(anomaly_router)
 app.include_router(failures_router)
 app.include_router(maintenance_router)
 app.include_router(rag_router)
+app.include_router(chat_router)
 
 @app.get("/")
 def root():

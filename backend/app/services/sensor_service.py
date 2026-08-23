@@ -19,6 +19,15 @@ def get_recent_sensor_readings(db: Session, machine_id: int, limit: int = 20) ->
     )
 
 
+def get_latest_sensor_reading(db: Session, machine_id: int) -> SensorReading | None:
+    return (
+        db.query(SensorReading)
+        .filter(SensorReading.machine_id == machine_id)
+        .order_by(SensorReading.timestamp.desc())
+        .first()
+    )
+
+
 def compute_machine_health(db: Session, machine: Machine, lookback: int = 50) -> dict[str, object]:
     readings = get_recent_sensor_readings(db, machine.id, limit=lookback)
 

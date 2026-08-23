@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.rag.retriever import Retriever
+from app.services.retrieval_service import retriever
 
 
 router = APIRouter(
@@ -22,9 +22,6 @@ class RAGSearchRequest(BaseModel):
         ge=1,
         le=20,
     )
-
-
-retriever = Retriever()
 
 
 @router.post("/search")

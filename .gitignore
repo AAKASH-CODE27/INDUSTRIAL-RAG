@@ -7,7 +7,7 @@ venv/
 
 # Environment variables
 .env
-
+.env.example
 # VS Code
 .vscode/
 
