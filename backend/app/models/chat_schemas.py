@@ -7,6 +7,7 @@ class ChatRequest(BaseModel):
     machine_id: int = Field(gt=0)
     question: str | None = Field(default=None, min_length=1, max_length=4000)
     message: str | None = Field(default=None, min_length=1, max_length=4000)
+    top_k: int = Field(default=5, ge=1, le=20)
 
     @model_validator(mode="after")
     def normalize_question(self):

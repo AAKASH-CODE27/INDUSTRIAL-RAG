@@ -254,6 +254,32 @@ def test_chat_rejects_missing_machine_and_empty_message(client, monkeypatch):
     assert empty_message.status_code == 422
 
 
+def test_chat_passes_bounded_top_k_to_retriever(client, monkeypatch):
+    machine = create_machine()
+    calls = []
+    monkeypatch.setattr(
+        "app.services.retrieval_service.retriever.search",
+        lambda query, top_k: calls.append((query, top_k)) or [],
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"machine_id": machine.id, "question": "What happened?", "top_k": 7},
+    )
+
+    assert response.status_code == 200
+    assert calls == [("What happened?", 7)]
+
+
+def test_chat_rejects_invalid_top_k(client):
+    response = client.post(
+        "/api/chat",
+        json={"machine_id": 1, "question": "Check the machine", "top_k": 21},
+    )
+
+    assert response.status_code == 422
+
+
 def test_chat_abstains_without_evidence_and_does_not_call_llm(client, monkeypatch):
     machine = create_machine()
     llm_calls = []

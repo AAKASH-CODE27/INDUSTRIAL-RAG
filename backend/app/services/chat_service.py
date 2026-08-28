@@ -10,10 +10,11 @@ from app.core.config import (
     CHAT_SENSOR_READING_LIMIT,
 )
 from app.core.logging_config import get_logger
-from app.models.chat_schemas import ChatRequest, ChatResponse, MaintenanceAnswer, RetrievedChunk
+from app.models.chat_schemas import ChatRequest, ChatResponse, MaintenanceAnswer
 from app.models.machine import Machine
 from app.models.maintenance import MaintenanceRecord
 from app.services import llm_service, retrieval_service
+from app.services.evidence_context import normalize_retrieved_chunks, source_references
 from app.services.prompt_service import build_maintenance_prompt
 from app.services.sensor_service import get_recent_sensor_readings
 
@@ -111,26 +112,6 @@ def _question_route(question: str) -> str:
     return "document"
 
 
-def _source_references(chunks: list[RetrievedChunk]) -> list[dict[str, object]]:
-    sources = []
-    seen_sources = set()
-    for chunk in chunks:
-        data = chunk.model_dump()
-        source_key = data.get("document_id") or data.get("document_name") or data.get("source")
-        if source_key in seen_sources:
-            continue
-        seen_sources.add(source_key)
-        sources.append(
-            {
-                key: value
-                for key, value in data.items()
-                if key in {"chunk_id", "document_id", "document_name", "source", "score", "section", "page"}
-                and value is not None
-            }
-        )
-    return sources
-
-
 def _abstention() -> MaintenanceAnswer:
     return MaintenanceAnswer(
         assessment="The available machine data and maintenance evidence are not sufficient to answer this question reliably.",
@@ -177,7 +158,7 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
 
     retrieval_started_at = perf_counter()
     try:
-        raw_chunks = retrieval_service.retriever.search(query=request.message, top_k=5)
+        raw_chunks = retrieval_service.retriever.search(query=request.message, top_k=request.top_k)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -200,13 +181,7 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         logger.exception("Sensor lookup failed: machine_id=%s", request.machine_id)
         raise HTTPException(status_code=503, detail="Database temporarily unavailable") from exc
 
-    chunks = [
-        RetrievedChunk(
-            content=chunk.get("text", ""),
-            **{key: value for key, value in chunk.items() if key != "text"},
-        )
-        for chunk in raw_chunks
-    ]
+    chunks = normalize_retrieved_chunks(raw_chunks)
     retrieval_confidence = max((chunk.score for chunk in chunks), default=0.0)
     question_route = _question_route(request.message)
     has_sensor_evidence = sensor_context is not None
@@ -217,7 +192,7 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         grounded = has_sensor_evidence and has_document_evidence
     else:
         grounded = has_document_evidence
-    sources = _source_references(chunks)
+    sources = source_references(chunks)
 
     if not grounded:
         answer = _abstention()
