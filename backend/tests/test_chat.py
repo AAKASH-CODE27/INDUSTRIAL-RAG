@@ -92,6 +92,130 @@ def test_valid_chat_uses_retrieval_and_sensor_context(client, monkeypatch):
     assert "prompt" not in payload
 
 
+
+def test_chat_accepts_question_contract(client, monkeypatch):
+    machine = create_machine()
+    monkeypatch.setattr(
+        "app.services.retrieval_service.retriever.search",
+        lambda query, top_k: [],
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"machine_id": machine.id, "question": "What should I inspect?"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["question"] == "What should I inspect?"
+
+
+def test_chat_limits_recent_sensor_context(client, monkeypatch):
+    machine = create_machine()
+    db = SessionLocal()
+    for offset in range(7):
+        db.add(
+            SensorReading(
+                machine_id=machine.id,
+                timestamp=datetime(2026, 8, 23, 11, 42 + offset),
+                temperature=70 + offset,
+                vibration=2 + offset,
+                pressure=100,
+                rpm=1500,
+                motor_current=8,
+            )
+        )
+    db.commit()
+    db.close()
+    monkeypatch.setattr(
+        "app.services.retrieval_service.retriever.search",
+        lambda query, top_k: [],
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"machine_id": machine.id, "question": "Show recent readings"},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["sensor_context"]["recent_readings"]) == 5
+
+
+def test_sensor_question_uses_structured_evidence_without_documents(client, monkeypatch):
+    machine = create_machine()
+    db = SessionLocal()
+    db.add(
+        SensorReading(
+            machine_id=machine.id,
+            timestamp=datetime(2026, 8, 23, 11, 42),
+            temperature=78.1,
+            vibration=3.5,
+            pressure=102.4,
+            rpm=1550,
+            motor_current=9.8,
+        )
+    )
+    db.commit()
+    db.close()
+    monkeypatch.setattr(
+        "app.services.retrieval_service.retriever.search",
+        lambda query, top_k: [],
+    )
+    llm_calls = []
+    monkeypatch.setattr(
+        "app.services.llm_service.generate",
+        lambda prompt: llm_calls.append(prompt),
+    )
+
+    response = client.post(
+        "/api/chat",
+        json={"machine_id": machine.id, "question": "What are the latest sensor readings for this machine?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["answer"]["insufficient_information"] is False
+    assert payload["sensor_context"]["temperature"] == 78.1
+    assert "temperature = 78.1" in payload["answer"]["assessment"]
+    assert "motor current = 9.8" in payload["answer"]["assessment"]
+    assert llm_calls == []
+
+
+def test_hybrid_question_requires_document_evidence(client, monkeypatch):
+    machine = create_machine()
+    db = SessionLocal()
+    db.add(
+        SensorReading(
+            machine_id=machine.id,
+            timestamp=datetime(2026, 8, 23, 11, 42),
+            temperature=78.1,
+            vibration=3.5,
+            pressure=102.4,
+            rpm=1550,
+            motor_current=9.8,
+        )
+    )
+    db.commit()
+    db.close()
+    monkeypatch.setattr(
+        "app.services.retrieval_service.retriever.search",
+        lambda query, top_k: [],
+    )
+    llm_calls = []
+    monkeypatch.setattr("app.services.llm_service.generate", lambda prompt: llm_calls.append(prompt))
+
+    response = client.post(
+        "/api/chat",
+        json={
+            "machine_id": machine.id,
+            "question": "Based on the current sensor readings and maintenance documentation, what could be causing the high vibration?",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["answer"]["insufficient_information"] is True
+    assert llm_calls == []
+
+
 def test_chat_without_sensor_data_returns_structured_response(client, monkeypatch):
     machine = create_machine()
     monkeypatch.setattr(

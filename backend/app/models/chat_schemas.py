@@ -1,19 +1,22 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ChatRequest(BaseModel):
     machine_id: int = Field(gt=0)
-    message: str = Field(min_length=1, max_length=4000)
+    question: str | None = Field(default=None, min_length=1, max_length=4000)
+    message: str | None = Field(default=None, min_length=1, max_length=4000)
 
-    @field_validator("message")
-    @classmethod
-    def normalize_message(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("Message cannot be empty")
-        return value
+    @model_validator(mode="after")
+    def normalize_question(self):
+        values = [value.strip() for value in (self.question, self.message) if value is not None]
+        if not values or not values[0]:
+            raise ValueError("Question cannot be empty")
+        normalized = values[0]
+        self.question = normalized
+        self.message = normalized
+        return self
 
 
 class RetrievedChunk(BaseModel):
@@ -36,6 +39,7 @@ class ChatResponse(BaseModel):
     answer: "MaintenanceAnswer"
     machine_context: dict[str, Any]
     sensor_context: dict[str, Any] | None = None
+    maintenance_context: list[dict[str, Any]] = Field(default_factory=list)
     sources: list[dict[str, Any]]
     retrieval_confidence: float
     grounded: bool
