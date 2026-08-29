@@ -181,7 +181,11 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         logger.exception("Sensor lookup failed: machine_id=%s", request.machine_id)
         raise HTTPException(status_code=503, detail="Database temporarily unavailable") from exc
 
-    chunks = normalize_retrieved_chunks(raw_chunks)
+    try:
+        chunks = normalize_retrieved_chunks(raw_chunks)
+    except (AttributeError, TypeError, ValueError) as exc:
+        logger.warning("Malformed retrieval payload ignored: machine_id=%s error=%s", request.machine_id, exc)
+        chunks = []
     retrieval_confidence = max((chunk.score for chunk in chunks), default=0.0)
     question_route = _question_route(request.message)
     has_sensor_evidence = sensor_context is not None
@@ -239,6 +243,8 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
     llm_started_at = perf_counter()
     try:
         answer = llm_service.generate(prompt)
+        if answer is None:
+            raise llm_service.LLMServiceError("LLM provider returned no answer")
     except llm_service.LLMServiceError as exc:
         logger.error("LLM generation failed: machine_id=%s error_type=%s", request.machine_id, type(exc).__name__)
         raise HTTPException(status_code=503, detail="The maintenance assistant is temporarily unavailable") from exc

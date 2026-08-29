@@ -8,6 +8,10 @@ venv/
 # Environment variables
 .env
 .env.example
+# Test artifacts
+backend/test_industrial_rag.db
+.pytest_cache/
+
 # VS Code
 .vscode/
 

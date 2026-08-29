@@ -1,50 +1,60 @@
 [
   {
     "query": "Why is spindle vibration increasing?",
+    "category": "known maintenance case",
     "expected_documents": [
       "03_Spindle_Bearing_Maintenance_Guide",
       "05_Vibration_Troubleshooting_Guide",
       "01_CNC_Machine_Operation_Manual"
-    ]
+    ],
+    "expected_abstain": false
   },
   {
     "query": "What causes high motor current?",
-    "expected_documents": ["04_Motor_Troubleshooting_Guide"]
+    "category": "symptom to cause",
+    "expected_documents": ["04_Motor_Troubleshooting_Guide"],
+    "expected_abstain": false
   },
   {
     "query": "What are signs of bearing degradation?",
+    "category": "symptom to corrective action",
     "expected_documents": [
       "03_Spindle_Bearing_Maintenance_Guide",
       "05_Vibration_Troubleshooting_Guide"
-    ]
+    ],
+    "expected_abstain": false
   },
   {
-    "query": "What causes low hydraulic pressure?",
-    "expected_documents": ["06_Hydraulic_System_Troubleshooting_Guide"]
-  },
-  {
-    "query": "What does error E104 indicate?",
-    "expected_documents": ["08_Industrial_Error_Code_Reference"]
-  },
-  {
-    "query": "What causes unstable RPM?",
-    "expected_documents": [
-      "04_Motor_Troubleshooting_Guide",
-      "05_Vibration_Troubleshooting_Guide"
-    ]
-  },
-  {
-    "query": "What should be checked when vibration and temperature increase?",
-    "expected_documents": [
-      "03_Spindle_Bearing_Maintenance_Guide",
-      "05_Vibration_Troubleshooting_Guide"
-    ]
-  },
-  {
-    "query": "What should be checked before machine maintenance?",
+    "query": "Which maintenance steps apply to Machine M-241 before startup?",
+    "category": "machine-specific question",
     "expected_documents": [
       "02_Preventive_Maintenance_Manual",
       "01_CNC_Machine_Operation_Manual"
-    ]
+    ],
+    "expected_abstain": false
+  },
+  {
+    "query": "Could this be a problem?",
+    "category": "ambiguous question",
+    "expected_documents": [],
+    "expected_abstain": true
+  },
+  {
+    "query": "What is the weather in Berlin today?",
+    "category": "irrelevant question",
+    "expected_documents": [],
+    "expected_abstain": true
+  },
+  {
+    "query": "Explain undocumented failure mode E999 and its exact root cause.",
+    "category": "unsupported question",
+    "expected_documents": [],
+    "expected_abstain": true
+  },
+  {
+    "query": "What caused the vibration if no sensor readings are available?",
+    "category": "insufficient-evidence question",
+    "expected_documents": [],
+    "expected_abstain": true
   }
 ]

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#102a43" />
+    <title>ForgeLine Maintenance Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/app/" aria-label="ForgeLine home">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span
+            ><strong>FORGELINE</strong
+            ><small>INDUSTRIAL INTELLIGENCE</small></span
+          >
+        </a>
+        <div class="system-state">
+          <span class="state-dot"></span
+          ><span id="connection-label">Connecting to control plane</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="context-panel" aria-labelledby="context-heading">
+          <div class="eyebrow">WORKSTATION / 09</div>
+          <h1 id="context-heading">Maintenance<br /><em>briefing</em></h1>
+          <p class="intro">Grounded guidance for the machines on your floor.</p>
+
+          <label class="field-label" for="machine-select">Active machine</label>
+          <select id="machine-select" disabled>
+            <option>Loading machine register...</option>
+          </select>
+          <div id="machine-card" class="machine-card empty-card">
+            Select a machine to load its context.
+          </div>
+
+          <div class="context-note">
+            <span class="note-rule"></span>
+            <p>
+              Answers are grounded in current machine data and indexed
+              maintenance evidence.
+            </p>
+          </div>
+        </aside>
+
+        <section class="chat-panel" aria-labelledby="chat-heading">
+          <div class="panel-heading">
+            <div>
+              <div class="eyebrow">LIVE ASSISTANT</div>
+              <h2 id="chat-heading">Ask the floor engineer</h2>
+            </div>
+            <button
+              id="clear-button"
+              class="icon-button"
+              type="button"
+              title="Clear conversation"
+              aria-label="Clear conversation"
+            >
+              &#8634;
+            </button>
+          </div>
+
+          <div id="conversation" class="conversation" aria-live="polite">
+            <div class="welcome-message">
+              <span class="welcome-index">01</span>
+              <div>
+                <h3>What needs attention?</h3>
+                <p>
+                  Ask about readings, vibration, procedures, or a suspected
+                  fault. Select a machine first so the answer has the right
+                  operating context.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <form id="chat-form" class="composer">
+            <label for="question-input" class="sr-only"
+              >Maintenance question</label
+            >
+            <textarea
+              id="question-input"
+              rows="2"
+              maxlength="4000"
+              placeholder="Describe the symptom or ask for a reading..."
+              required
+            ></textarea>
+            <div class="composer-footer">
+              <span id="input-hint">Select a machine to begin</span>
+              <button
+                id="send-button"
+                class="ask-button"
+                type="submit"
+                disabled
+              >
+                <span>Ask assistant</span
+                ><span aria-hidden="true">&#8594;</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="evidence-panel" aria-labelledby="evidence-heading">
+          <div class="eyebrow">TRACEABILITY</div>
+          <div class="evidence-heading-row">
+            <h2 id="evidence-heading">Evidence log</h2>
+            <span id="source-count" class="count-badge">0</span>
+          </div>
+          <div id="evidence-content" class="evidence-content">
+            <div class="evidence-empty">
+              <span class="empty-icon">+</span>
+              <p>Sources used for the next answer will appear here.</p>
+            </div>
+          </div>
+          <div class="rail-footer">
+            <span class="rail-label">GROUNDING MODE</span
+            ><strong>Evidence first</strong>
+          </div>
+        </aside>
+      </section>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+    <script src="app.js" defer></script>
+  </body>
+</html>
