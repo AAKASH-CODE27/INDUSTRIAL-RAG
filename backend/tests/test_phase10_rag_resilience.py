@@ -93,6 +93,7 @@ def test_rag_api_handles_empty_query(client):
 
 def test_llm_generate_requires_configuration(monkeypatch):
     monkeypatch.setattr(llm_service, "LLM_API_KEY", "")
+    monkeypatch.setattr(llm_service, "GEMINI_API_KEY", "")
 
     try:
         llm_service.generate("test prompt")
@@ -103,10 +104,12 @@ def test_llm_generate_requires_configuration(monkeypatch):
 
 
 def test_llm_generate_handles_timeout(monkeypatch):
+    from app.services.gemini_provider import GeminiProviderError
+    
     monkeypatch.setattr(llm_service, "LLM_API_KEY", "test-key")
     monkeypatch.setattr(llm_service, "LLM_MAX_RETRIES", 1)
     monkeypatch.setattr(llm_service, "LLM_RETRY_DELAY_SECONDS", 0)
-    monkeypatch.setattr(llm_service.urllib.request, "urlopen", lambda request, timeout: (_ for _ in ()).throw(socket.timeout()))
+    monkeypatch.setattr(llm_service.GeminiProvider, "generate_text", lambda self, prompt: (_ for _ in ()).throw(GeminiProviderError("Gemini request timed out")))
 
     try:
         llm_service.generate("test prompt")

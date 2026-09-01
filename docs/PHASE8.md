@@ -9,7 +9,7 @@ Technician query
   -> RetrievedChunk evidence normalization
   -> bounded machine, sensor, and maintenance context
   -> existing prompt builder
-  -> existing OpenAI-compatible LLM adapter
+  -> Gemini LLM adapter
   -> structured answer and backend-verified sources
 ```
 

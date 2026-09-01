@@ -1,10 +1,10 @@
 # Phase 6 Chat API
 
-The stateless `POST /api/chat` endpoint combines machine data, the latest sensor reading, and the existing Phase 5 `Retriever.search()` results. `chat_service.handle_chat()` builds a bounded grounded prompt and calls the isolated OpenAI-compatible adapter in `app/services/llm_service.py` once for normal requests.
+The stateless `POST /api/chat` endpoint combines machine data, the latest sensor reading, and the existing Phase 5 `Retriever.search()` results. `chat_service.handle_chat()` builds a bounded grounded prompt and calls the isolated Gemini LLM adapter in `app/services/llm_service.py` once for normal requests.
 
 ## Configuration
 
-Set `LLM_API_KEY` and optionally `LLM_BASE_URL`, `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_MAX_TOKENS`, and `LLM_TIMEOUT_SECONDS`. Configuration is optional for development; without a key, normal requests return a controlled `503`. No key is returned or logged. See `backend/.env.example`.
+Set `GEMINI_API_KEY` and optionally `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_MAX_TOKENS`, and `GEMINI_TIMEOUT_SECONDS`. Legacy `LLM_API_KEY` and `LLM_MODEL` variables are also supported for backward compatibility. Configuration is optional for development; without a key, normal requests return a controlled `503`. No key is returned or logged. See `backend/.env.example`.
 
 ## Response behavior
 
