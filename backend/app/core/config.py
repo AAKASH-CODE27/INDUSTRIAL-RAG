@@ -28,7 +28,7 @@ DB_ECHO = _get_bool("DB_ECHO", False)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "models/text-embedding-004")
+GEMINI_EMBEDDING_MODEL = (os.getenv("GEMINI_EMBEDDING_MODEL") or "gemini-embedding-001").removeprefix("models/")
 LLM_API_KEY = GEMINI_API_KEY
 LLM_BASE_URL = os.getenv("GEMINI_BASE_URL") or os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com")
 LLM_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL") or GEMINI_MODEL
