@@ -59,7 +59,8 @@ API and chat context
 - Pydantic validation
 - Python-dotenv configuration
 - Qdrant-compatible vector retrieval
-- SentenceTransformers / embeddings
+- Google Gemini (`gemini-embedding-001`)
+- Google Gemini (`gemini-1.5-flash`)
 - Pytest for regression testing
 - Vanilla JavaScript frontend
 
@@ -83,9 +84,17 @@ API and chat context
 
 5. Copy the example environment file if needed:
 
-   copy backend\.env.example backend\.env
+8. Seed the SQLite database with generated data:
 
-6. Start the API:
+   python scripts/generate_sensor_data.py
+   python scripts/seed_industrial_data.py
+   python scripts/load_sensor_data.py
+
+9. Ingest documents into the local Qdrant instance:
+
+   python scripts/ingest_documents.py
+
+10. Start the API:
 
    cd backend
    uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
