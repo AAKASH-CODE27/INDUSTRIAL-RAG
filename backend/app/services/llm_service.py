@@ -42,7 +42,13 @@ def generate(prompt: str) -> MaintenanceAnswer:
             break
         except GeminiProviderError as exc:
             last_error = exc
-            if "rate limit" in str(exc).lower() or "timed out" in str(exc).lower():
+            error_message = str(exc).lower()
+
+            if (
+                "rate limit" in error_message
+                or "timed out" in error_message
+                or "temporarily unavailable" in error_message
+            ):
                 if attempt < attempts:
                     logger.warning("Gemini transient failure, retrying attempt %s/%s: %s", attempt + 1, attempts, exc)
                     time.sleep(max(0.0, float(LLM_RETRY_DELAY_SECONDS)) * (2 ** (attempt - 1)))
