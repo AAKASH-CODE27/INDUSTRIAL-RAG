@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from qdrant_client import QdrantClient
@@ -10,16 +11,29 @@ COLLECTION_NAME = "industrial_maintenance"
 class VectorStore:
 
     def __init__(self, storage_path: str = "data/qdrant"):
-        self.storage_path = Path(storage_path)
+        qdrant_url = os.getenv("QDRANT_URL", "").strip()
+        qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
 
-        self.storage_path.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        if qdrant_url:
+            # Production: Qdrant Cloud
+            self.storage_path = None
 
-        self.client = QdrantClient(
-            path=str(self.storage_path)
-        )
+            self.client = QdrantClient(
+                url=qdrant_url,
+                api_key=qdrant_api_key or None,
+            )
+        else:
+            # Local development: local Qdrant
+            self.storage_path = Path(storage_path)
+
+            self.storage_path.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            self.client = QdrantClient(
+                path=str(self.storage_path)
+            )
 
     def create_collection(
         self,
@@ -29,7 +43,6 @@ class VectorStore:
         """
         Create the Industrial Maintenance collection.
         """
-
         collections = self.client.get_collections()
 
         existing_names = [
