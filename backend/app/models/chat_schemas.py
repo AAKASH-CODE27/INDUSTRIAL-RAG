@@ -11,13 +11,26 @@ class ChatRequest(BaseModel):
 
     @model_validator(mode="after")
     def normalize_question(self):
-        values = [value.strip() for value in (self.question, self.message) if value is not None]
-        if not values or not values[0]:
+        # Prioritize message if provided and non-empty, otherwise fallback to question
+        msg_val = self.message.strip() if self.message else ""
+        q_val = self.question.strip() if self.question else ""
+
+        # If question is the Swagger default "string" and message is given, prefer message
+        if msg_val and (not q_val or q_val.lower() == "string"):
+            chosen = msg_val
+        elif q_val and q_val.lower() != "string":
+            chosen = q_val
+        elif msg_val:
+            chosen = msg_val
+        elif q_val:
+            chosen = q_val
+        else:
             raise ValueError("Question cannot be empty")
-        normalized = values[0]
-        self.question = normalized
-        self.message = normalized
+
+        self.question = chosen
+        self.message = chosen
         return self
+
 
 
 class RetrievedChunk(BaseModel):

@@ -15,6 +15,7 @@ from app.models.machine import Machine
 from app.models.maintenance import MaintenanceRecord
 from app.services import llm_service, retrieval_service
 from app.services.evidence_context import normalize_retrieved_chunks, source_references
+from app.services.guardrail_service import check_input_guardrail, sanitize_output
 from app.services.prompt_service import build_maintenance_prompt
 from app.services.sensor_service import get_recent_sensor_readings
 
@@ -156,6 +157,26 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
     if machine is None:
         raise HTTPException(status_code=404, detail="Machine not found")
 
+    # Guardrail check: reject prompt injections, sensitive credential requests, politics, off-topic requests
+    is_safe, guardrail_answer = check_input_guardrail(request.message)
+    if not is_safe and guardrail_answer is not None:
+        logger.warning(
+            "Chat request blocked by guardrail: machine_id=%s question=%r",
+            request.machine_id,
+            request.message,
+        )
+        return ChatResponse(
+            machine_id=machine.id,
+            question=request.message,
+            answer=guardrail_answer,
+            machine_context=_machine_context(machine),
+            sensor_context=None,
+            maintenance_context=[],
+            sources=[],
+            retrieval_confidence=0.0,
+            grounded=False,
+        )
+
     retrieval_started_at = perf_counter()
     try:
         raw_chunks = retrieval_service.retriever.search(query=request.message, top_k=request.top_k)
@@ -249,6 +270,7 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         logger.error("LLM generation failed: machine_id=%s error_type=%s", request.machine_id, type(exc).__name__)
         raise HTTPException(status_code=503, detail="The maintenance assistant is temporarily unavailable") from exc
     llm_ms = (perf_counter() - llm_started_at) * 1000
+    answer = sanitize_output(answer)
     logger.info(
         "Chat succeeded: machine_id=%s retrieval_count=%s retrieval_ms=%.1f llm_ms=%.1f total_ms=%.1f model_configured=%s",
         request.machine_id,
@@ -258,6 +280,7 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         (perf_counter() - started_at) * 1000,
         bool(llm_service.LLM_MODEL),
     )
+    is_grounded = grounded and not answer.insufficient_information
     return ChatResponse(
         machine_id=machine.id,
         question=request.message,
@@ -267,5 +290,5 @@ def handle_chat(request: ChatRequest, db: Session) -> ChatResponse:
         maintenance_context=maintenance_context,
         sources=sources,
         retrieval_confidence=retrieval_confidence,
-        grounded=grounded,
+        grounded=is_grounded,
     )
