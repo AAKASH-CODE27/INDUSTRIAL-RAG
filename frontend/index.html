@@ -4,11 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#102a43" />
-    <title>ForgeLine Maintenance Assistant</title>
+    <title>ForgeLine Maintenance Assistant | Industrial RAG</title>
+    <meta
+      name="description"
+      content="Industrial maintenance assistant powered by retrieval-augmented intelligence and equipment telemetry."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -16,42 +20,70 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <a class="brand" href="/app/" aria-label="ForgeLine home">
+        <a class="brand" href="./" aria-label="ForgeLine Home">
           <span class="brand-mark" aria-hidden="true">F</span>
-          <span
-            ><strong>FORGELINE</strong
-            ><small>INDUSTRIAL INTELLIGENCE</small></span
-          >
+          <span class="brand-text">
+            <strong>FORGELINE</strong>
+            <small>INDUSTRIAL INTELLIGENCE</small>
+          </span>
         </a>
-        <div class="system-state">
-          <span class="state-dot"></span
-          ><span id="connection-label">Connecting to control plane</span>
+        <div class="topbar-actions">
+          <div class="system-state" id="system-state" aria-live="polite">
+            <span class="state-dot" aria-hidden="true"></span>
+            <span id="connection-label">Connecting to control plane</span>
+          </div>
+          <button
+            id="global-refresh-button"
+            class="topbar-refresh-btn"
+            type="button"
+            title="Refresh application and reload machines"
+            aria-label="Refresh application and reload machines"
+          >
+            <span class="refresh-icon" aria-hidden="true">&#8634;</span>
+            <span class="refresh-text">Reset / Sync</span>
+          </button>
         </div>
       </header>
 
       <section class="workspace">
+        <!-- LEFT: Machine Context Panel -->
         <aside class="context-panel" aria-labelledby="context-heading">
-          <div class="eyebrow">WORKSTATION / 09</div>
-          <h1 id="context-heading">Maintenance<br /><em>briefing</em></h1>
-          <p class="intro">Grounded guidance for the machines on your floor.</p>
+          <div class="briefing-header">
+            <div class="eyebrow">WORKSTATION / 09</div>
+            <h1 id="context-heading">Maintenance<br /><em>briefing</em></h1>
+            <p class="intro">Grounded guidance for the machines on your floor.</p>
+          </div>
 
-          <label class="field-label" for="machine-select">Active machine</label>
-          <select id="machine-select" disabled>
-            <option>Loading machine register...</option>
-          </select>
-          <div id="machine-card" class="machine-card empty-card">
+          <div class="control-group">
+            <div class="field-label-row">
+              <label class="field-label" for="machine-select">Active machine</label>
+              <button
+                id="retry-machines-button"
+                class="inline-retry-btn hidden"
+                type="button"
+                aria-label="Retry loading machine list"
+              >
+                Retry
+              </button>
+            </div>
+            <select id="machine-select" disabled aria-describedby="machine-card">
+              <option value="">Loading machine register...</option>
+            </select>
+          </div>
+
+          <div id="machine-card" class="machine-card empty-card" role="region" aria-label="Selected machine details">
             Select a machine to load its context.
           </div>
 
           <div class="context-note">
-            <span class="note-rule"></span>
+            <span class="note-rule" aria-hidden="true"></span>
             <p>
-              Answers are grounded in current machine data and indexed
-              maintenance evidence.
+              Answers are strictly grounded in live machine parameters, recent service history, and indexed maintenance manuals.
             </p>
           </div>
         </aside>
 
+        <!-- CENTER: Live Assistant / Chat -->
         <section class="chat-panel" aria-labelledby="chat-heading">
           <div class="panel-heading">
             <div>
@@ -62,68 +94,69 @@
               id="clear-button"
               class="icon-button"
               type="button"
-              title="Clear conversation"
-              aria-label="Clear conversation"
+              title="Clear conversation history"
+              aria-label="Clear conversation history"
             >
               &#8634;
             </button>
           </div>
 
-          <div id="conversation" class="conversation" aria-live="polite">
+          <div id="conversation" class="conversation" aria-live="polite" role="log">
             <div class="welcome-message">
               <span class="welcome-index">01</span>
               <div>
                 <h3>What needs attention?</h3>
                 <p>
-                  Ask about readings, vibration, procedures, or a suspected
-                  fault. Select a machine first so the answer has the right
-                  operating context.
+                  Ask about sensor readings, elevated vibration, troubleshooting procedures, or suspected component wear. Select an active machine first so responses incorporate operational parameters.
                 </p>
               </div>
             </div>
           </div>
 
-          <form id="chat-form" class="composer">
-            <label for="question-input" class="sr-only"
-              >Maintenance question</label
-            >
+          <form id="chat-form" class="composer" novalidate>
+            <label for="question-input" class="sr-only">Maintenance question</label>
             <textarea
               id="question-input"
-              rows="2"
+              rows="3"
               maxlength="4000"
-              placeholder="Describe the symptom or ask for a reading..."
+              placeholder="Describe the symptom, telemetry reading, or procedure to verify..."
               required
             ></textarea>
             <div class="composer-footer">
-              <span id="input-hint">Select a machine to begin</span>
+              <span id="input-hint" class="input-hint">Select a machine to begin</span>
               <button
                 id="send-button"
                 class="ask-button"
                 type="submit"
                 disabled
               >
-                <span>Ask assistant</span
-                ><span aria-hidden="true">&#8594;</span>
+                <span class="btn-text">Ask assistant</span>
+                <span class="btn-arrow" aria-hidden="true">&rarr;</span>
               </button>
             </div>
           </form>
         </section>
 
+        <!-- RIGHT: Traceability / Evidence Panel -->
         <aside class="evidence-panel" aria-labelledby="evidence-heading">
           <div class="eyebrow">TRACEABILITY</div>
           <div class="evidence-heading-row">
             <h2 id="evidence-heading">Evidence log</h2>
-            <span id="source-count" class="count-badge">0</span>
+            <span id="source-count" class="count-badge" aria-label="Retrieved sources count">0</span>
           </div>
-          <div id="evidence-content" class="evidence-content">
+
+          <div id="confidence-banner" class="confidence-banner hidden" aria-live="polite"></div>
+
+          <div id="evidence-content" class="evidence-content" role="region" aria-label="Retrieved documentation chunks">
             <div class="evidence-empty">
-              <span class="empty-icon">+</span>
-              <p>Sources used for the next answer will appear here.</p>
+              <span class="empty-icon" aria-hidden="true">+</span>
+              <p>Sources used for the next answer will appear here with document titles, sections, and relevance scores.</p>
             </div>
           </div>
+
           <div class="rail-footer">
-            <span class="rail-label">GROUNDING MODE</span
-            ><strong>Evidence first</strong>
+            <span class="rail-label">GROUNDING MODE</span>
+            <strong>Evidence first</strong>
           </div>
         </aside>
       </section>
