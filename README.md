@@ -1,218 +1,546 @@
 # Industrial Maintenance RAG
 
-An industrial maintenance assistant that combines machine context, sensor telemetry, historical maintenance data, and retrieval-augmented generation (RAG) to answer technician questions grounded in equipment documentation and local operational history.
+AI-Powered Industrial Maintenance Support System using Retrieval-Augmented Generation (RAG).
 
-## Problem
+## Live Demo
 
-Industrial maintenance teams need fast, contextual answers to questions like:
+**Application:**  
+https://industrial-rag.onrender.com/app/
 
-- Why is vibration unusually high on a motor?
-- What maintenance procedure applies to this equipment?
-- Which safety steps are required before inspection?
-- Are the current sensor readings consistent with prior failures or known issues?
+**API Documentation:**  
+https://industrial-rag.onrender.com/docs
 
-The project delivers a production-minded backend and frontend that route these questions through validation, retrieval, and grounded answer generation while reducing unsupported claims.
+---
 
-## Solution overview
+## Overview
+
+Industrial Maintenance RAG is an AI-powered maintenance support system designed to help users troubleshoot industrial machines using machine data and maintenance knowledge.
 
 The system combines:
 
-- a FastAPI backend with validation and safety checks
-- SQLAlchemy models for machines, failures, maintenance, and sensor readings
-- a document ingestion and retrieval pipeline using embeddings and Qdrant-like vector storage
-- context assembly that mixes sensor context, maintenance history, and retrieved evidence
-- a grounded maintenance assistant that abstains when evidence is missing or weak
-- a lightweight frontend for technician interaction
+- Machine sensor data
+- Failure records
+- Maintenance records
+- Industrial maintenance documents
+- Semantic vector search
+- Google Gemini
 
-## Architecture
+Instead of generating an answer only from the language model's internal knowledge, the system retrieves relevant maintenance information and machine-specific context before generating an answer.
 
-User
-↓
-Frontend
-↓
-FastAPI API
-↓
-Validation + request routing
-↓
-RAG / Retrieval layer
-↓
-Context assembly (sensor + maintenance + docs)
-↓
-LLM answer generation
-↓
-Grounded response + source references
+### In Simple Terms
 
-Sensors
-↓
-Database
-↓
-Anomaly / maintenance intelligence
-↓
-API and chat context
+User Question
+      ↓
+Retrieve Relevant Maintenance Knowledge
+      ↓
+Retrieve Machine Sensor Information
+      ↓
+Combine Relevant Context
+      ↓
+Gemini
+      ↓
+Grounded Maintenance Response
+      ↓
+Answer + Sources
 
-## Technology stack
 
-- Python 3.11
-- FastAPI
-- SQLAlchemy
-- SQLite in development/test mode
-- Pydantic validation
-- Python-dotenv configuration
-- Qdrant-compatible vector retrieval
-- Google Gemini (`gemini-embedding-001`)
-- Google Gemini (`gemini-1.5-flash`)
-- Pytest for regression testing
-- Vanilla JavaScript frontend
+---
 
-## Repository layout
+## Problem Statement
 
-- backend/app — FastAPI app, routes, models, services, RAG modules
-- backend/data — stored evaluation data, vector metadata, sample documents
-- backend/scripts — setup, data generation, evaluation utilities
-- backend/tests — unit and integration regression tests
-- frontend — technician-facing interface
-- docs — project documentation and phase notes
+Industrial maintenance teams need quick access to machine conditions, maintenance history, failure information, and technical documentation when troubleshooting equipment.
 
-## Backend setup
+Traditional document search requires engineers to manually search through multiple documents and records.
 
-1. Open a terminal in the repository root.
-2. Change into the backend folder.
-3. Create or activate the virtual environment.
-4. Install dependencies:
+This project provides a conversational interface that retrieves relevant information and generates a maintenance-oriented response using machine-specific and document-based context.
 
-   pip install -r requirements.txt
+---
 
-5. Copy the example environment file if needed:
+## Objectives
 
-8. Seed the SQLite database with generated data:
+- Provide machine-specific maintenance assistance.
+- Retrieve relevant information from industrial documents.
+- Combine document knowledge with machine data.
+- Generate responses using retrieved evidence.
+- Provide source information with generated responses.
+- Provide REST APIs for accessing the system.
+- Provide a simple web interface for maintenance queries.
 
-   python scripts/generate_sensor_data.py
-   python scripts/seed_industrial_data.py
-   python scripts/load_sensor_data.py
+---
 
-9. Ingest documents into the local Qdrant instance:
+## System Architecture
 
-   python scripts/ingest_documents.py
 
-10. Start the API:
+                         ┌──────────────────────┐
+                         │        User          │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │    Web Interface     │
+                         │   HTML/CSS/JavaScript│
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │    FastAPI Backend   │
+                         └──────────┬───────────┘
+                                    │
+                    ┌───────────────┼────────────────┐
+                    │               │                │
+                    ▼               ▼                ▼
+             ┌────────────┐  ┌────────────┐  ┌────────────┐
+             │ PostgreSQL │  │   Qdrant   │  │   Gemini   │
+             │            │  │            │  │            │
+             │ Machines   │  │ Document   │  │ Response   │
+             │ Sensors    │  │ Embeddings │  │ Generation │
+             │ Failures   │  │ Retrieval  │  │            │
+             │ Maintenance│  │            │  │            │
+             └─────┬──────┘  └──────┬─────┘  └──────┬─────┘
+                   │                │               │
+                   └────────────────┼───────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ Grounded Maintenance │
+                         │       Response       │
+                         └──────────────────────┘
 
-   cd backend
-   uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
-7. Verify the API:
+---
 
-   http://127.0.0.1:8000/docs
+## RAG Pipeline
 
-## Frontend setup
+### 1. Document Ingestion
 
-Open the app by serving the frontend from the same backend or via a static host. The frontend reads the backend base URL from the page or from a global variable when present.
+Industrial maintenance documents are processed before they are used for retrieval.
 
-Typical local flow:
+PDF Documents
+      ↓
+Text Extraction
+      ↓
+Text Cleaning
+      ↓
+Logical Chunking
+      ↓
+Embedding Generation
+      ↓
+Qdrant Vector Database
 
-- start the backend on port 8000
-- open the frontend page via the repository static mount, or serve the frontend files in a local web server
-- confirm the machine list loads and the chat flow is reachable
 
-## Environment variables
+Each document chunk is converted into a vector embedding and stored in Qdrant together with relevant metadata.
 
-The project uses environment variables through Python-dotenv. A safe example is in:
+### 2. Question Answering
 
-- backend/.env.example
+When a user asks a question:
 
-Relevant variables include:
+User Question
+      ↓
+Query Embedding
+      ↓
+Qdrant Semantic Search
+      ↓
+Relevant Document Chunks
+      ↓
+Machine Sensor Context
+      ↓
+Maintenance Context
+      ↓
+Context Assembly
+      ↓
+Gemini
+      ↓
+Structured Maintenance Answer
+      ↓
+Sources + Retrieval Information
+```
 
-- DATABASE_URL
-- LLM_API_KEY
-- LLM_BASE_URL
-- LLM_MODEL
-- CHAT_MIN_RETRIEVAL_SCORE
-- CORS_ALLOWED_ORIGINS
-- QDRANT_PATH
-- QDRANT_COLLECTION
-- APP_ENV
-- LOG_LEVEL
+The retrieved information provides project-specific context for the generated response.
 
-Never commit a real .env file with production credentials.
+---
 
-## RAG pipeline
+## Data Sources
 
-The application flow is:
+The system uses multiple types of information.
 
-1. User sends a machine-specific question.
-2. The request is validated and normalized.
-3. Machine context and recent sensor data are loaded.
-4. The retriever searches indexed maintenance documents.
-5. Retrieved chunks are normalized, filtered, and scored.
-6. A prompt is assembled using machine context, maintenance history, and evidence.
-7. The LLM is called only when the evidence is sufficiently grounded.
-8. If the evidence is weak or missing, the system abstains and clearly explains the limitation.
-9. Sources are returned to the frontend for traceability.
+### Machine Data
 
-## Sensor and anomaly flow
+The production system contains five machines:
 
-The system also supports checking machine health through sensor and maintenance records:
+- `CNC-001`
+- `CNC-002`
+- `LATHE-001`
+- `PRESS-001`
+- `MILL-001`
 
-- sensor readings are queried by machine and time window
-- maintenance history provides context for prior issues
-- raw data is normalized into answer-friendly summaries
-- anomaly and maintenance logic can be surfaced through the API and chat interface
+### Sensor Data
+
+Machine telemetry includes:
+
+- Temperature
+- Vibration
+- Pressure
+- RPM
+- Motor current
+
+### Maintenance Data
+
+The relational database contains:
+
+- Machine information
+- Failure records
+- Maintenance records
+- Sensor readings
+
+### Document Knowledge
+
+Industrial maintenance documents provide technical information used by the semantic retrieval system.
+
+---
+
+## Key Features
+
+- Machine-specific maintenance assistance
+- Semantic document retrieval
+- Qdrant vector search
+- Gemini-powered response generation
+- PostgreSQL machine and maintenance data
+- Sensor context integration
+- Maintenance context integration
+- Source-aware responses
+- Retrieval confidence information
+- Structured AI responses
+- REST API
+- Swagger API documentation
+- Web-based frontend
+- Production deployment
+
+---
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, FastAPI |
+| Relational Database | PostgreSQL |
+| Vector Database | Qdrant Cloud |
+| LLM | Google Gemini |
+| Embeddings | Gemini Embeddings |
+| Document Processing | PyPDF |
+| ORM | SQLAlchemy |
+| API Server | Uvicorn |
+| Deployment | Render |
+
+---
+
+## API Endpoints
+
+### Health
+
+GET /api/health
+
+Checks the backend service status.
+
+### Machines
+
+GET /api/machines
+
+
+Returns the registered machines.
+
+### Sensors
+
+GET /api/sensors
+
+Returns sensor information.
+
+### RAG Search 
+POST /api/rag/search
+
+
+Performs semantic retrieval against the maintenance knowledge base.
+
+### Chat
+
+POST /api/chat
+
+Generates a machine-specific maintenance response using retrieved knowledge and machine context.
+
+---
+
+## API Documentation
+
+Interactive Swagger documentation:
+
+https://industrial-rag.onrender.com/docs
+
+---
+
+## Project Structure
+
+INDUSTRIAL-RAG/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── db/
+│   │   ├── models/
+│   │   ├── rag/
+│   │   ├── schemas/
+│   │   └── services/
+│   │
+│   ├── scripts/
+│   ├── tests/
+│   ├── documents/
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── frontend/
+│   ├── index.html
+│   ├── app.js
+│   └── styles.css
+│
+├── docs/
+│
+├── README.md
+└── .gitignore
+
+
+---
+
+## Local Development
+
+### Prerequisites
+
+Install:
+
+- Python 3.11+
+- PostgreSQL
+- Qdrant
+- Google Gemini API key
+
+### 1. Clone the Repository
+
+git clone https://github.com/AAKASH-CODE27/INDUSTRIAL-RAG.git
+cd INDUSTRIAL-RAG
+
+
+### 2. Create a Virtual Environment
+
+python -m venv venv
+
+#### Windows
+
+venv\Scripts\activate
+
+
+### 3. Install Backend Dependencies
+
+cd backend
+pip install -r requirements.txt
+
+
+### 4. Configure Environment Variables
+
+Create:
+
+backend/.env
+
+Add the required configuration:
+
+env
+GEMINI_API_KEY=your_gemini_api_key
+
+GEMINI_MODEL=your_gemini_model
+GEMINI_EMBEDDING_MODEL=your_embedding_model
+
+QDRANT_URL=your_qdrant_url
+QDRANT_API_KEY=your_qdrant_api_key
+QDRANT_COLLECTION=industrial_maintenance
+
+DATABASE_URL=your_postgresql_connection_string
+
+Never commit `.env` to GitHub.
+
+Do not place API keys, database passwords, or Qdrant credentials in source code.
+
+Use `.env.example` as the configuration template.
+
+---
+
+## Running the Backend
+
+From the `backend` directory:
+
+venv\Scripts\python -m uvicorn app.main:app --reload
+
+
+Backend:
+
+http://127.0.0.1:8000
+
+
+Swagger:
+
+http://127.0.0.1:8000/docs
+
+
+---
+
+## Running the Frontend
+
+Open another terminal:
+
+cd frontend
+python -m http.server 5173
+
+
+Open:
+
+http://localhost:5173
+
 
 ## Testing
 
-Run the full test suite with:
+Run the backend test suite from the `backend` directory:
 
-cd backend
-python -m pytest tests -q
+pytest -q
 
-The project includes test coverage for:
 
-- health and validation endpoints
-- machine and sensor flows
-- anomaly and maintenance logic
-- chat and retrieval resilience
-- LLM/provider error handling
-- end-to-end chat validation
+The project includes tests covering areas such as:
 
-## Evaluation
+- API health
+- Document processing
+- Embeddings
+- Retrieval
+- Vector storage
+- Chat functionality
+- RAG behavior
 
-The retrieval evaluation dataset is stored in:
+---
 
-- backend/data/rag_evaluation.json
+## Production Deployment
 
-The evaluation script is:
+The production application is deployed using Render.
 
-- backend/scripts/evaluate_retrieval.py
+### Application
 
-Run it with:
+https://industrial-rag.onrender.com/app/
 
-cd backend
-python scripts/evaluate_retrieval.py
+### Backend
 
-This script calculates retrieval hit rate and abstention alignment using the dataset currently checked into the repo. It does not fabricate metrics.
+https://industrial-rag.onrender.com/
 
-## Demo flow
+### Swagger
 
-A representative flow is:
+https://industrial-rag.onrender.com/docs
 
-1. start backend
-2. confirm /api/health works
-3. select a machine in the frontend
-4. ask a maintenance question
-5. review returned sources and answer
-6. try a low-confidence or unsupported question to confirm abstention behavior
-7. confirm invalid requests yield 422 responses and unavailable services yield 503-style behavior
+### Production Architecture
 
-## Known limitations
 
-- The default environment is designed for local development and testing.
-- Real vector indexes and LLM service configuration must be supplied in a production environment.
-- Retrieval quality depends on the indexed documents, embeddings, and dataset quality.
-- The system is grounded and cautious, which means it may abstain rather than speculate when evidence is insufficient.
+User Browser
+     │
+     ▼
+Render
+     │
+     ▼
+FastAPI Backend
+     │
+     ├──────────────► PostgreSQL
+     │
+     ├──────────────► Qdrant Cloud
+     │
+     └──────────────► Google Gemini
 
-## Future improvements
+## Example Use Case
 
-- richer document ingestion and metadata normalization
-- stronger evaluation scoring for answer correctness and faithfulness
-- runtime monitoring and structured observability dashboards
-- production deployment hardening and secret management
-- broader live-model integration and model fallback policies
+A user selects a machine and asks:
+
+
+Why is the vibration level high and what maintenance action should be taken?
+
+
+The system:
+
+1. Identifies the selected machine.
+2. Retrieves relevant sensor information.
+3. Searches the maintenance knowledge base.
+4. Retrieves relevant maintenance information.
+5. Combines the retrieved information.
+6. Sends the relevant context to Gemini.
+7. Generates a structured maintenance response.
+8. Returns supporting sources and retrieval information.
+
+---
+
+## Why RAG?
+
+A general-purpose language model does not automatically know the project's specific machine data or maintenance documents.
+
+RAG addresses this by retrieving relevant project information before generating the response.
+
+
+Without RAG
+
+Question
+   ↓
+LLM
+   ↓
+General Knowledge
+   ↓
+Answer
+
+
+With RAG
+
+Question
+   ↓
+Retrieve Relevant Evidence
+   ↓
+Machine + Maintenance Context
+   ↓
+LLM
+   ↓
+Grounded Answer
+
+
+---
+
+## Limitations
+
+- The quality of the response depends on the quality and coverage of the available maintenance documents.
+- Sensor data must be correctly associated with the corresponding machine.
+- Generated responses should support maintenance decision-making rather than replace qualified maintenance procedures.
+- Production industrial use would require approved manufacturer documentation, authentication, monitoring, and additional safety controls.
+
+---
+
+## Future Improvements
+
+Possible future improvements include:
+
+- Integration with real industrial IoT sensor streams
+- Additional machine-specific maintenance manuals
+- Automated anomaly detection
+- Predictive maintenance models
+- Role-based access control
+- Maintenance work-order integration
+- Historical sensor trend visualization
+- Alert and notification systems
+- Expanded evaluation datasets
+- Improved observability and monitoring
+
+---
+
+## Author
+
+**Aakash**
+
+Industrial Maintenance RAG  
+AI-Powered Industrial Maintenance Support System
+
+GitHub:
+
+https://github.com/AAKASH-CODE27/INDUSTRIAL-RAG
